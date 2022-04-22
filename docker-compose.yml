@@ -1,0 +1,65 @@
+version: '3.9'
+
+networks:
+  kong-net:
+
+services:
+  kong-database:
+    image: postgres:11-alpine
+    container_name: kong-database
+    ports:
+      - '5432:5432'
+    environment:
+      - 'POSTGRES_USER=kong'
+      - 'POSTGRES_DB=kong'
+      - 'POSTGRES_PASSWORD=kongpass'
+    volumes:
+      - './postgresql/data:/var/lib/postgresql/data'
+    networks:
+      - kong-net
+    restart: always
+
+  kong-migrate:
+    image: kong:2.8.1-alpine
+    container_name: kong-migrate
+    environment:
+      - 'KONG_DATABASE=postgres'
+      - 'KONG_PG_HOST=kong-database'
+      - 'KONG_PG_USER=kong'
+      - 'KONG_PG_PASSWORD=kongpass'
+    depends_on:
+      - kong-database
+    networks:
+      - kong-net
+    command: kong migrations bootstrap
+    restart: on-failure
+
+  kong-gateway:
+    image: kong:2.8.1-alpine
+    container_name: kong-gateway
+    ports:
+      - '8000:8000'
+#      - '8443:8443'
+      - '8001:8001'
+#      - '8444:8444'
+    environment:
+      - 'KONG_DATABASE=postgres'
+      - 'KONG_PG_HOST=kong-database'
+      - 'KONG_PG_USER=kong'
+      - 'KONG_PG_PASSWORD=kongpass'
+      - 'KONG_PROXY_ACCESS_LOG=/dev/stdout'
+      - 'KONG_ADMIN_ACCESS_LOG=/dev/stdout'
+      - 'KONG_PROXY_ERROR_LOG=/dev/stderr'
+      - 'KONG_ADMIN_ERROR_LOG=/dev/stderr'
+      - 'KONG_ADMIN_LISTEN=0.0.0.0:8001 reuseport backlog=16384, 0.0.0.0:8444 http2 ssl reuseport backlog=16384'
+#      - 'KONG_SSL_CERT=/etc/tls/kong/kong-crt.pem'
+#      - 'KONG_SSL_CERT_KEY=/etc/tls/kong/kong-key.pem'
+#      - 'KONG_ADMIN_SSL_CERT=/etc/tls/kong/kong-crt.pem'
+#      - 'KONG_ADMIN_SSL_CERT_KEY=/etc/tls/kong/kong-key.pem'
+    depends_on:
+      - kong-migrate
+    volumes:
+      - './ssl:/etc/tls/kong'
+    networks:
+      - kong-net
+    restart: always
