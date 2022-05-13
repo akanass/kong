@@ -78,10 +78,10 @@ services:
 #      - '8001:8001' # comment admin http port
       - '8444:8444' # uncomment admin https port
     environment: # uncomment all SSL data
-      - 'KONG_SSL_CERT=/etc/tls/kong/kong-crt.pem'
-      - 'KONG_SSL_CERT_KEY=/etc/tls/kong/kong-key.pem'
-      - 'KONG_ADMIN_SSL_CERT=/etc/tls/kong/kong-crt.pem'
-      - 'KONG_ADMIN_SSL_CERT_KEY=/etc/tls/kong/kong-key.pem'
+      - 'KONG_SSL_CERT=/usr/local/custom/kong/ssl/kong-crt.pem'
+      - 'KONG_SSL_CERT_KEY=/usr/local/custom/kong/ssl/kong-key.pem'
+      - 'KONG_ADMIN_SSL_CERT=/usr/local/custom/kong/ssl/kong-crt.pem'
+      - 'KONG_ADMIN_SSL_CERT_KEY=/usr/local/custom/kong/ssl/kong-key.pem'
 ```
 
 When done, you can launch **Kong** with **TLS** support:
