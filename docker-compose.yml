@@ -19,9 +19,9 @@ services:
       - kong-net
     restart: always
 
-  kong-migrate:
+  kong-migrations:
     image: kong:2.8.1-alpine
-    container_name: kong-migrate
+    container_name: kong-migrations
     environment:
       - 'KONG_DATABASE=postgres'
       - 'KONG_PG_HOST=kong-database'
@@ -32,6 +32,21 @@ services:
     networks:
       - kong-net
     command: kong migrations bootstrap
+    restart: on-failure
+
+  kong-migrations-up:
+    image: kong:2.8.1-alpine
+    container_name: kong-migrations-up
+    environment:
+      - 'KONG_DATABASE=postgres'
+      - 'KONG_PG_HOST=kong-database'
+      - 'KONG_PG_USER=kong'
+      - 'KONG_PG_PASSWORD=kongpass'
+    depends_on:
+      - kong-migrations
+    networks:
+      - kong-net
+    command: kong migrations up && kong migrations finish
     restart: on-failure
 
   kong-gateway:
@@ -57,7 +72,7 @@ services:
       - 'KONG_ADMIN_SSL_CERT=/usr/local/custom/kong/ssl/kong-crt.pem'
       - 'KONG_ADMIN_SSL_CERT_KEY=/usr/local/custom/kong/ssl/kong-key.pem'
     depends_on:
-      - kong-migrate
+      - kong-migrations-up
     volumes:
       - './ssl:/usr/local/custom/kong/ssl'
     networks:
